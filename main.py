@@ -34,7 +34,7 @@ file_train = os.listdir(path_train+'pos/')
 for i in file_train:
 	f = open(path_train+'pos/'+i,'r')
 	content = f.read()
-	list_train.append(content.split('\n')[0])
+	list_train.append(content)
 	list_train_target.append(1)
 
 # Negative
@@ -43,7 +43,7 @@ file_train = os.listdir(path_train+'neg/')
 for i in file_train:
 	f = open(path_train+'neg/'+i,'r')
 	content = f.read()
-	list_train.append(content.split('\n')[0])
+	list_train.append(content)
 	list_train_target.append(0)
 
 print 'Adding positive testing data'	
@@ -55,7 +55,7 @@ file_test = os.listdir(path_test+'pos/')
 for i in file_test:
 	f = open(path_test+'pos/'+i,'r')
 	content = f.read()
-	list_test.append(content.split('\n')[0])
+	list_test.append(content)
 	list_test_target.append(1)
 
 # Negative
@@ -64,11 +64,32 @@ file_test = os.listdir(path_test+'neg/')
 for i in file_test:
 	f = open(path_test+'neg/'+i,'r')
 	content = f.read()
-	list_test.append(content.split('\n')[0])
+	list_test.append(content)
 	list_test_target.append(0)
 
+print 'Replace URL and mention'
+for i in range(len(list_train)):
+	temp = list_train[i]
+	temp = temp.split(' ')
+	for j in range(len(temp)):
+		if temp[j].startswith('@'):
+			temp[j]='||T||'
+		elif (temp[j].lower()).startswith('http'):
+			temp[j]='||U||'
+	list_train[i] = ' '.join(temp)
+
+for i in range(len(list_test)):
+	temp = list_test[i]
+	temp = temp.split(' ')
+	for j in range(len(temp)):
+		if temp[j].startswith('@'):
+			temp[j]='||T||'
+		elif (temp[j].lower()).startswith('http'):
+			temp[j]='||U||'
+	list_test[i] = ' '.join(temp)
+
 print 'Extracting feature from training and testing data'
-vectorizer = TfidfVectorizer(stop_words='english',token_pattern='.')
+vectorizer = TfidfVectorizer(stop_words='english',token_pattern='([^\\s]+)')
 X_train = vectorizer.fit_transform(list_train)
 X_test = vectorizer.transform(list_test)
 y_train = list_train_target
@@ -113,13 +134,11 @@ for i in file_test:
 
 true = 0
 false = 0
-j = 0
-for i in pred:
-	if i==y_test[j]:
+for i in range(len(pred)):
+	if pred[i]==y_test[i]:
 		true=true+1
 	else:
 		false=false+1
-	j=j+1
 	
 print 'Accuracy: ',true*100.0/(true+false)
 '''print 'Remove stopwords and replace url/mention on tweets training'	
