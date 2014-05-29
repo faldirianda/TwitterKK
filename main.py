@@ -1,6 +1,18 @@
 import os
-from sklearn import svm
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.svm import LinearSVC
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+class L1LinearSVC(LinearSVC):
+    def fit(self, X, y):
+        # The smaller C, the stronger the regularization.
+        # The more regularization, the more sparsity.
+        self.transformer_ = LinearSVC(penalty="l1", dual=False, tol=1e-3)
+        X = self.transformer_.fit_transform(X, y)
+        return LinearSVC.fit(self, X, y)
+
+    def predict(self, X):
+        X = self.transformer_.transform(X)
+        return LinearSVC.predict(self, X)
 
 '''print 'Adding stopwords'
 path_stopwords = '../corpora/stopwords/'
@@ -34,15 +46,42 @@ for i in file_train:
 	list_train.append(content.split('\n')[0])
 	list_train_target.append(0)
 
-print 'Extracting feature from training data'
-vectorizer = CountVectorizer(min_df=1,lowercase=True,stop_words='english')
-X = vectorizer.fit_transform(list_train)
+print 'Adding positive testing data'	
+path_test = '../corpora/tweets_test/'
+list_test = []
+list_test_target = []
+# Positive
+file_test = os.listdir(path_test+'pos/')
+for i in file_test:
+	f = open(path_test+'pos/'+i,'r')
+	content = f.read()
+	list_test.append(content.split('\n')[0])
+	list_test_target.append(1)
+
+# Negative
+print 'Adding negative testing data'
+file_test = os.listdir(path_test+'neg/')
+for i in file_test:
+	f = open(path_test+'neg/'+i,'r')
+	content = f.read()
+	list_test.append(content.split('\n')[0])
+	list_test_target.append(0)
+
+print 'Extracting feature from training and testing data'
+vectorizer = TfidfVectorizer(stop_words='english',token_pattern='.')
+X_train = vectorizer.fit_transform(list_train)
+X_test = vectorizer.transform(list_test)
+y_train = list_train_target
+y_test = list_test_target
 
 print 'Training with linear kernel SVM'
-svc_linear = svm.SVC(kernel='linear',C=1)
-svc_linear.fit(X,list_train_target)
+svc_linear = L1LinearSVC()
+svc_linear.fit(X_train,y_train)
 
-print 'Input testing data'
+print 'Predict test data'
+pred = svc_linear.predict(X_test)
+
+'''print 'Input testing data'
 true = 0
 false = 0
 path_test = '../corpora/tweets_test/'
@@ -70,8 +109,18 @@ for i in file_test:
 	if ans==0:
 		true = true+1
 	else:
-		false = false+1
-		
+		false = false+1'''
+
+true = 0
+false = 0
+j = 0
+for i in pred:
+	if i==y_test[j]:
+		true=true+1
+	else:
+		false=false+1
+	j=j+1
+	
 print 'Accuracy: ',true*100.0/(true+false)
 '''print 'Remove stopwords and replace url/mention on tweets training'	
 for i in range(len(list_train)):
