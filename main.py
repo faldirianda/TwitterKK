@@ -14,19 +14,21 @@ class L1LinearSVC(LinearSVC):
         X = self.transformer_.transform(X)
         return LinearSVC.predict(self, X)
 
-'''print 'Adding stopwords'
-path_stopwords = '../corpora/stopwords/'
+print 'Adding stopwords'
+path_stopwords = '../dataset/stopwords/'
 file_stopwords = os.listdir(path_stopwords)
 list_stopwords = []
 for i in file_stopwords:
 	f = open(path_stopwords+i,'r')
 	content = f.read()
+	content = content.decode("utf-8-sig")
+	content = content.encode("utf-8")
 	content = content.split('\n')
 	content.remove('')
-	list_stopwords = list_stopwords + content'''
-
+	list_stopwords = list_stopwords + content
+	
 print 'Adding positive training data'	
-path_train = '../corpora/tweets_train/'
+path_train = '../dataset/tweets_train/'
 list_train = []
 list_train_target = []
 # Positive
@@ -34,6 +36,9 @@ file_train = os.listdir(path_train+'pos/')
 for i in file_train:
 	f = open(path_train+'pos/'+i,'r')
 	content = f.read()
+	content = content.decode("utf-8-sig")
+	content = content.encode("utf-8")
+	content = content.strip()
 	list_train.append(content)
 	list_train_target.append(1)
 
@@ -43,11 +48,14 @@ file_train = os.listdir(path_train+'neg/')
 for i in file_train:
 	f = open(path_train+'neg/'+i,'r')
 	content = f.read()
+	content = content.decode("utf-8-sig")
+	content = content.encode("utf-8")
+	content = content.strip()
 	list_train.append(content)
 	list_train_target.append(0)
 
 print 'Adding positive testing data'	
-path_test = '../corpora/tweets_test/'
+path_test = '../dataset/tweets_test/'
 list_test = []
 list_test_target = []
 # Positive
@@ -55,6 +63,9 @@ file_test = os.listdir(path_test+'pos/')
 for i in file_test:
 	f = open(path_test+'pos/'+i,'r')
 	content = f.read()
+	content = content.decode("utf-8-sig")
+	content = content.encode("utf-8")
+	content = content.strip()
 	list_test.append(content)
 	list_test_target.append(1)
 
@@ -64,6 +75,9 @@ file_test = os.listdir(path_test+'neg/')
 for i in file_test:
 	f = open(path_test+'neg/'+i,'r')
 	content = f.read()
+	content = content.decode("utf-8-sig")
+	content = content.encode("utf-8")
+	content = content.strip()
 	list_test.append(content)
 	list_test_target.append(0)
 
@@ -89,7 +103,7 @@ for i in range(len(list_test)):
 	list_test[i] = ' '.join(temp)
 
 print 'Extracting feature from training and testing data'
-vectorizer = TfidfVectorizer(stop_words='english',token_pattern='([^\\s]+)')
+vectorizer = TfidfVectorizer(stop_words=list_stopwords,token_pattern='([^\\s]+)')
 X_train = vectorizer.fit_transform(list_train)
 X_test = vectorizer.transform(list_test)
 y_train = list_train_target
